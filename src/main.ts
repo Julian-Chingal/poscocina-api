@@ -1,10 +1,13 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import compression from 'compression';
+import { Logger } from 'nestjs-pino';
+import { AppModule } from './app.module';
+import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './shared/filters/http-exception.filter';
+import { TimeoutInterceptor } from './shared/interceptors/timeout.interceptor';
+import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -30,6 +33,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   // Pipes, Filtros
+  app.useGlobalInterceptors(
+    new TransformInterceptor(),
+    new TimeoutInterceptor(30_000),
+  );
+  app.useGlobalFilters(new AllExceptionsFilter(app.get(Logger)));
 
   // Swagger
   if (isDev) {
