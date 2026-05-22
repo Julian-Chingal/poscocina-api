@@ -27,7 +27,7 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect();
-    this.logger.log('Conexión exitosa a la base de datos.');
+    this.logger.log('Conexion exitosa a la base de datos.');
   }
 
   async onModuleDestroy() {

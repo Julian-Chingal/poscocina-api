@@ -37,6 +37,7 @@ model User {
 model Role {
   id          String           @id @default(uuid())
   name        String           @unique  // ADMIN, CASHIER, COOK, WAITER
+  label       String?          
   description String?
   permissions RolePermission[]
   users       User[]
@@ -47,6 +48,7 @@ model Role {
 model Module {
   id          String       @id @default(uuid())
   name        String       @unique  // pos, inventory, products, reports, users
+  label       String?
   permissions Permission[]
   
   @@map("modules")
@@ -57,6 +59,7 @@ model Permission {
   module   Module           @relation(fields: [moduleId], references: [id])
   moduleId String           @map("module_id")
   action   String           // read, write, delete, manage
+  label    String?
   roles    RolePermission[]
   
   @@unique([moduleId, action])
