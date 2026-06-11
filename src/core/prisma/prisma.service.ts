@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   Injectable,
   Logger,
@@ -17,7 +16,7 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
   constructor(private readonly configService: ConfigService) {
     const adapter = new PrismaPg({
-      connectionString: configService.get<string>('database.databaseUrl'),
+      connectionString: configService.get<string>('prisma.databaseUrl'),
     });
 
     super({

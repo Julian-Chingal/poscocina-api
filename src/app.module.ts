@@ -9,6 +9,9 @@ import { CoreModule } from './core/core.module';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
 
+// Modules
+import { HealthModule } from './modules/health/health.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +23,9 @@ import { validateEnv } from './config/env.validation';
     }),
 
     CoreModule,
+
+    // Modules
+    HealthModule,
   ],
   controllers: [],
   providers: [],
