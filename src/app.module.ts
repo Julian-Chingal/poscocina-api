@@ -11,6 +11,7 @@ import { validateEnv } from './config/env.validation';
 
 // Modules
 import { HealthModule } from './modules/health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { HealthModule } from './modules/health/health.module';
 
     // Modules
     HealthModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
