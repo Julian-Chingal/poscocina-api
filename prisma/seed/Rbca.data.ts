@@ -9,6 +9,8 @@ const MODULES = [
   { name: 'reports', label: 'Reportes' },
   { name: 'users', label: 'Usuarios' },
   { name: 'settings', label: 'Configuración' },
+  { name: 'payments', label: 'Facturacion' },
+  { name: 'rbac', label: 'Gestion de Roles y Permisos' },
 ];
 
 export type ModuleName = (typeof MODULES)[number]['name'];
@@ -67,6 +69,18 @@ const PERMISSIONS: Array<{
   { module: 'users', action: 'delete', label: 'Desactivar usuarios' },
   { module: 'users', action: 'manage', label: 'Gestión completa de usuarios' },
 
+  // RCBA
+  { module: 'rbac', action: 'read', label: 'Ver rcba' },
+  { module: 'rbac', action: 'write', label: 'Crear y editar rcba' },
+  { module: 'rbac', action: 'delete', label: 'Desactivar rcba' },
+  { module: 'rbac', action: 'manage', label: 'Gestión completa' },
+
+  // Payments
+  { module: 'payments', action: 'read', label: 'Ver facturacion' },
+  { module: 'payments', action: 'write', label: 'Crear y editar facturas' },
+  { module: 'payments', action: 'delete', label: 'Desactivar facturas' },
+  { module: 'payments', action: 'manage', label: 'Gestión completa' },
+
   // Configuración
   { module: 'settings', action: 'read', label: 'Ver configuración' },
   { module: 'settings', action: 'manage', label: 'Modificar configuración' },
@@ -120,6 +134,8 @@ export const ROLES: Array<{
       'products:manage',
       'reports:manage',
       'users:manage',
+      'payments:manage',
+      'rcba:manage',
       'settings:manage',
     ],
   },
@@ -133,6 +149,8 @@ export const ROLES: Array<{
       'inventory:manage',
       'products:manage',
       'reports:manage',
+      'payments:manage',
+      'rcba:manage',
       'users:read',
       'users:write',
       'settings:read',
@@ -150,6 +168,8 @@ export const ROLES: Array<{
       'inventory:read',
       'products:read',
       'reports:read',
+      'payments:read',
+      'payments:write',
     ],
   },
   {
