@@ -1,0 +1,17 @@
+.git
+.gitignore
+
+node_modules
+dist
+
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+.env
+.env.*
+
+!.env.template
+
+Dockerfile
+.dockerignore
