@@ -1,46 +1,34 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine AS builder
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-
-RUN corepack enable
-RUN apk add --no-cache openssl
-
-FROM base AS dependencies
+RUN npm install -g pnpm@10.4.1
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
 
-FROM base AS build
+COPY . .
+
+RUN npx prisma generate
+RUN pnpm run build
+
+
+FROM node:22-alpine
+
+RUN npm install -g pnpm@10.4.1
 WORKDIR /app
 
-COPY . .
-COPY --from=dependencies /app/node_modules ./node_modules
-
-RUN pnpm prisma generate
-RUN pnpm build
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile
 RUN pnpm prune --prod
 
-FROM base AS deploy
-WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/generated ./generated
 
-ENV NODE_ENV=production
-ENV PORT=3000
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-# Copy necessary files from build stage
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/prisma ./prisma
-COPY entrypoint.sh /app/entrypoint.sh
+EXPOSE 3000
 
-RUN chmod +x /app/entrypoint.sh
-
-# Exponer el puerto de forma dinámica
-EXPOSE ${PORT}
-
-ENTRYPOINT ["/app/entrypoint.sh"]
-
-# Start the application
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["pnpm", "run", "start:prod"]

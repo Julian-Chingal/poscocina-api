@@ -1,13 +1,14 @@
-version: '3.8'
+name: poscocina-api
+
 services:
-  app:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
     ports:
-      - '${PORT:-3001}:3001'
+      - '3001:3000'
+    env_file:
+      - ${ENV_FILE:-.env}
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=${DATABASE_URL}
-      - PORT=${PORT:-3001}
+      RUN_MIGRATIONS: 'false'
+      RUN_SEED: 'false'
