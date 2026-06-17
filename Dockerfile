@@ -28,11 +28,19 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# Copy necessary files from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/prisma ./prisma
+COPY entrypoint.sh /app/entrypoint.sh
 
-EXPOSE 3000
+RUN chmod +x /app/entrypoint.sh
 
-CMD ["node", "dist/main.js"]
+# Exponer el puerto de forma dinámica
+EXPOSE ${PORT}
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Start the application
+CMD ["pnpm", "run", "start:prod"]
