@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RedisService } from '@core/redis/redis.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
@@ -12,6 +8,9 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { JwtPayload, JwtRefreshPayload } from '@shared/types/jwt-payload.type';
 import { SignOptions } from 'jsonwebtoken';
+import { Response } from 'express';
+import { RefreshTokenHashService } from './services/refresh-token-hash.service';
+import { setAuthCookies } from './services/auth-cookies';
 
 @Injectable()
 export class AuthService {
@@ -20,11 +19,13 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly redis: RedisService,
+    private readonly refreshTokenHash: RefreshTokenHashService,
   ) {}
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, res: Response) {
+    const email = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email },
       include: {
         role: {
           include: {
@@ -69,6 +70,14 @@ export class AuthService {
       sessionId,
     });
 
+    // Set Cookies
+    setAuthCookies(
+      res,
+      tokens.accessToken,
+      tokens.refreshToken,
+      this.configService.getOrThrow<string>('app.nodeEnv'),
+    );
+
     // Return
     return {
       user: {
@@ -78,11 +87,15 @@ export class AuthService {
         role: user.role.name,
         permissions,
       },
-      ...tokens,
     };
   }
 
-  async refresh(userId: string, sessionId: string, refreshToken: string) {
+  async refresh(
+    userId: string,
+    sessionId: string,
+    refreshToken: string,
+    res: Response,
+  ) {
     const sessionRaw = await this.redis.get(`session:${sessionId}`);
     if (!sessionRaw) throw new UnauthorizedException('Session expired');
 
@@ -92,11 +105,15 @@ export class AuthService {
     };
 
     // Validar token
-    const refreshValid = await bcrypt.compare(
+    const refreshValid = this.refreshTokenHash.compare(
       refreshToken,
       session.refreshTokenHash,
     );
-    if (!refreshValid) throw new UnauthorizedException('Invalid refresh token');
+    if (!refreshValid) {
+      // El hash no coincide: posible robo/reuso de un refresh token
+      await this.logoutAllSessions(session.userId);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
     // User
     const user = await this.prisma.user.findUnique({
@@ -121,13 +138,21 @@ export class AuthService {
     );
 
     // Generar nuevos tokens
-    return this.generateTokens({
+    const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
       role: user.role.name,
       permissions,
       sessionId,
     });
+
+    setAuthCookies(
+      res,
+      tokens.accessToken,
+      tokens.refreshToken,
+      this.configService.getOrThrow<string>('app.nodeEnv'),
+    );
+    return { message: 'Tokens renewed' };
   }
 
   async logout(sessionId: string) {

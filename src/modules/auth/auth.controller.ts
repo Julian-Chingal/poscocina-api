@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   Body,
   Controller,
   HttpCode,
   HttpStatus,
   Post,
+  Res,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
@@ -25,6 +23,8 @@ import { JwtRefreshGuard } from '@shared/guards/jwt-refresh.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import type { JwtPayload } from '@shared/types/jwt-payload.type';
+import type { Response } from 'express';
+import { clearAuthCookies } from './services/auth-cookies';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -51,11 +51,64 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Login exitoso. Devuelve access y refresh tokens.',
+    schema: {
+      type: 'object',
+      required: ['data', 'meta'],
+      properties: {
+        data: {
+          type: 'object',
+          required: ['user'],
+          properties: {
+            user: {
+              type: 'object',
+              required: ['id', 'email', 'name', 'role', 'permissions'],
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'ff9219f5-804a-4abf-beeb-8cd11bcdd9d3',
+                },
+                email: {
+                  type: 'string',
+                  format: 'email',
+                  example: 'admin@poscocina.com',
+                },
+                name: {
+                  type: 'string',
+                  example: 'Administrador',
+                },
+                role: {
+                  type: 'string',
+                  enum: ['ADMIN', 'KITCHEN', 'CASHIER', 'INVENTORY'],
+                  example: 'ADMIN',
+                },
+                permissions: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  example: ['pos:read', 'pos:write', 'kitchen:read'],
+                },
+              },
+            },
+          },
+        },
+        meta: {
+          type: 'object',
+          required: ['timestamp'],
+          properties: {
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-06-20T06:22:02.075Z',
+            },
+          },
+        },
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
   @UsePipes(new ZodValidationPipe(LoginSchema))
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    return this.authService.login(dto, res);
   }
 
   // Refresh token endpoint
@@ -84,14 +137,16 @@ export class AuthController {
     description: 'Refresh token inválido',
   })
   @UseGuards(JwtRefreshGuard)
-  refresh(
+  async refresh(
     @CurrentUser()
-    user: any,
+    user: { userId: string; sessionId: string; refreshToken: string },
+    @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.refresh(
       user.userId,
       user.sessionId,
       user.refreshToken,
+      res,
     );
   }
 
@@ -112,8 +167,13 @@ export class AuthController {
     description: 'No autorizado',
   })
   @UseGuards(JwtAuthGuard)
-  logout(@CurrentUser() user: JwtPayload) {
-    return this.authService.logout(user.sessionId);
+  async logout(
+    @CurrentUser() user: JwtPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logout(user.sessionId);
+    clearAuthCookies(res);
+    return;
   }
 
   // Logout all sessions endpoint

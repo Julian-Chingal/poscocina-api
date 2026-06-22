@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './shared/filters/http-exception.filter';
 import { TimeoutInterceptor } from './shared/interceptors/timeout.interceptor';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -24,6 +25,7 @@ async function bootstrap() {
   // Seguridad
   app.use(helmet());
   app.use(compression());
+  app.use(cookieParser());
   app.enableCors({
     origin: config.get<string[]>('app.allowedOrigins'),
     credentials: true,

@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { RedisService } from '@core/redis/redis.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { JwtPayload } from '@shared/types/jwt-payload.type';
+import { Request } from 'express';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
 @Injectable()
@@ -15,7 +14,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly redis: RedisService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => {
+          return req?.cookies?.access_token;
+        },
+      ]),
       secretOrKey: config.getOrThrow('jwt.secret'),
     });
   }

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtRefreshPayload } from '@shared/types/jwt-payload.type';
 import { RedisService } from '@core/redis/redis.service';
@@ -18,7 +18,9 @@ export class JwtRefreshStrategy extends PassportStrategy(
     private readonly redis: RedisService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => req?.cookies?.refresh_token ?? null,
+      ]),
       secretOrKey: config.getOrThrow('jwt.refreshSecret'),
       passReqToCallback: true,
     });
@@ -28,10 +30,13 @@ export class JwtRefreshStrategy extends PassportStrategy(
     const session = await this.redis.get(`session:${payload.sessionId}`);
     if (!session) throw new UnauthorizedException('Session expired');
 
+    const refreshToken = req.cookies?.refresh_token as string | undefined;
+    if (!refreshToken) throw new UnauthorizedException('Refresh token missing');
+
     return {
       userId: payload.sub,
       sessionId: payload.sessionId,
-      refreshToken: req.body.refreshToken,
+      refreshToken,
     };
   }
 }
