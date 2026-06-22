@@ -10,17 +10,24 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiBody,
-  ApiBearerAuth,
-  ApiResponse,
+  ApiOkResponse,
+  ApiNoContentResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import type { LoginDto } from './dto/login.dto';
+import { LoginDto } from './dto/login.dto';
+import { LoginResponse, RefreshResponse } from './dto/responses.dto';
 import { JwtRefreshGuard, JwtAuthGuard } from '@shared/guards';
 import { CurrentUser } from '@shared/decorators';
 import type { JwtPayload } from '@shared/types';
 import type { Response } from 'express';
 import { clearAuthCookies } from './services/auth-cookies';
+import {
+  ApiAuth,
+  ApiValidationError,
+  ApiAuthErrors,
+} from '@shared/swagger/decorators';
+import { UnauthorizedResponse } from '@shared/swagger/responses';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -30,78 +37,15 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión en el sistema' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['email', 'password'],
-      properties: {
-        email: {
-          type: 'string',
-          format: 'email',
-          example: 'admin@poscocina.com',
-        },
-        password: { type: 'string', example: '123456' },
-      },
-    },
+  @ApiOkResponse({
+    type: LoginResponse,
+    description: 'Inicio de sesión exitoso. Tokens enviados vía cookies.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Login exitoso. Devuelve access y refresh tokens.',
-    schema: {
-      type: 'object',
-      required: ['data', 'meta'],
-      properties: {
-        data: {
-          type: 'object',
-          required: ['user'],
-          properties: {
-            user: {
-              type: 'object',
-              required: ['id', 'email', 'name', 'role', 'permissions'],
-              properties: {
-                id: {
-                  type: 'string',
-                  format: 'uuid',
-                  example: 'ff9219f5-804a-4abf-beeb-8cd11bcdd9d3',
-                },
-                email: {
-                  type: 'string',
-                  format: 'email',
-                  example: 'admin@poscocina.com',
-                },
-                name: {
-                  type: 'string',
-                  example: 'Administrador',
-                },
-                role: {
-                  type: 'string',
-                  enum: ['ADMIN', 'KITCHEN', 'CASHIER', 'INVENTORY'],
-                  example: 'ADMIN',
-                },
-                permissions: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  example: ['pos:read', 'pos:write', 'kitchen:read'],
-                },
-              },
-            },
-          },
-        },
-        meta: {
-          type: 'object',
-          required: ['timestamp'],
-          properties: {
-            timestamp: {
-              type: 'string',
-              format: 'date-time',
-              example: '2026-06-20T06:22:02.075Z',
-            },
-          },
-        },
-      },
-    },
+  @ApiValidationError()
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedResponse,
+    description: 'Credenciales inválidas.',
   })
-  @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(dto, res);
   }
@@ -109,28 +53,16 @@ export class AuthController {
   // Refresh token endpoint
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Obtener nuevo access token usando refresh token' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['refreshToken'],
-      properties: {
-        refreshToken: {
-          type: 'string',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
-      },
-    },
+  @ApiOperation({
+    summary: 'Renovar access token usando el refresh token de la cookie',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Tokens renovados',
+  @ApiOkResponse({
+    type: RefreshResponse,
+    description: 'Tokens renovados exitosamente vía cookies.',
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Refresh token inválido',
-  })
+  @ApiAuth()
+  @ApiAuthErrors()
+  @ApiValidationError()
   @UseGuards(JwtRefreshGuard)
   async refresh(
     @CurrentUser()
@@ -148,19 +80,13 @@ export class AuthController {
   // Logout endpoint
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
   @ApiOperation({
     summary:
       'Cerrar la sesión actual (revoca el refresh token y marca sesión como terminada)',
   })
-  @ApiResponse({
-    status: 204,
-    description: 'Sesión cerrada',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado',
-  })
+  @ApiNoContentResponse({ description: 'Sesión cerrada exitosamente.' })
+  @ApiAuth()
+  @ApiAuthErrors()
   @UseGuards(JwtAuthGuard)
   async logout(
     @CurrentUser() user: JwtPayload,
@@ -174,13 +100,12 @@ export class AuthController {
   // Logout all sessions endpoint
   @Post('logout-all')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Cerrar todas las sesiones activas del usuario' })
-  @ApiResponse({
-    status: 204,
+  @ApiNoContentResponse({
     description: 'Todas las sesiones cerradas exitosamente.',
   })
-  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  @ApiAuth()
+  @ApiAuthErrors()
   @UseGuards(JwtAuthGuard)
   logoutAll(@CurrentUser() user: JwtPayload) {
     return this.authService.logoutAllSessions(user.sub);

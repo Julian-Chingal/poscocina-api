@@ -8,6 +8,13 @@ import {
 import { Logger } from 'nestjs-pino';
 import { Request, Response } from 'express';
 
+/** Shape que NestJS retorna internamente en sus HttpExceptions */
+interface NestHttpExceptionBody {
+  message: string | string[];
+  error?: string;
+  statusCode: number;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   constructor(private readonly logger: Logger) {}
@@ -22,10 +29,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message = isHttpException
-      ? exception.getResponse()
-      : 'Error interno del servidor';
-
     if (!isHttpException) {
       this.logger.error(
         {
@@ -37,13 +40,34 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
+    // getResponse() puede devolver string u objeto — lo aplanamos
+    const exceptionBody = isHttpException ? exception.getResponse() : null;
+
+    const isProduction500 =
+      status === HttpStatus.INTERNAL_SERVER_ERROR &&
+      process.env.NODE_ENV === 'production';
+
+    let message: string;
+    let error: string | undefined;
+
+    if (isProduction500 || !isHttpException) {
+      message = 'Error interno del servidor';
+    } else if (typeof exceptionBody === 'string') {
+      message = exceptionBody;
+    } else {
+      const body = exceptionBody as NestHttpExceptionBody;
+      message = Array.isArray(body.message)
+        ? body.message.join(', ')
+        : (body.message ?? 'Error desconocido');
+      error = body.error;
+    }
+
     response.status(status).json({
       statusCode: status,
+      message,
+      ...(error && { error }),
+      timestamp: new Date().toISOString(),
       path: request.url,
-      message:
-        status === 500 && process.env.NODE_ENV === 'production'
-          ? 'Error interno del servidor'
-          : message,
     });
   }
 }
