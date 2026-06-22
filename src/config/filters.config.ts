@@ -1,4 +1,4 @@
-import { AllExceptionsFilter } from '../shared/filters/http-exception.filter';
+import { AllExceptionsFilter } from '../shared/filters';
 import { INestApplication } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 

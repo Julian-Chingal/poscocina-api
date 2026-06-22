@@ -9,8 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { JwtPayload, JwtRefreshPayload } from '@shared/types/jwt-payload.type';
 import { SignOptions } from 'jsonwebtoken';
 import { Response } from 'express';
-import { RefreshTokenHashService } from './services/refresh-token-hash.service';
-import { setAuthCookies } from './services/auth-cookies';
+import { RefreshTokenHashService, setAuthCookies } from './services';
 
 @Injectable()
 export class AuthService {

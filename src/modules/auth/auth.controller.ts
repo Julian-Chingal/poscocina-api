@@ -6,7 +6,6 @@ import {
   Post,
   Res,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,13 +15,10 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { ZodValidationPipe } from '@shared/pipes/zod-validation.pipe';
-import { LoginSchema } from './dto/login.dto';
 import type { LoginDto } from './dto/login.dto';
-import { JwtRefreshGuard } from '@shared/guards/jwt-refresh.guard';
-import { CurrentUser } from '@shared/decorators/current-user.decorator';
-import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
-import type { JwtPayload } from '@shared/types/jwt-payload.type';
+import { JwtRefreshGuard, JwtAuthGuard } from '@shared/guards';
+import { CurrentUser } from '@shared/decorators';
+import type { JwtPayload } from '@shared/types';
 import type { Response } from 'express';
 import { clearAuthCookies } from './services/auth-cookies';
 
@@ -106,7 +102,6 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
-  @UsePipes(new ZodValidationPipe(LoginSchema))
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(dto, res);
   }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtRefreshPayload } from '@shared/types/jwt-payload.type';
+import { JwtRefreshPayload } from '@shared/types';
 import { RedisService } from '@core/redis/redis.service';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';

@@ -3,7 +3,7 @@ import { RedisService } from '@core/redis/redis.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { JwtPayload } from '@shared/types/jwt-payload.type';
+import { JwtPayload } from '@shared/types';
 import { Request } from 'express';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 

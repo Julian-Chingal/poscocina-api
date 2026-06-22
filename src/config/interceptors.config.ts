@@ -1,6 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import { TransformInterceptor } from '../shared/interceptors/transform.interceptor';
-import { TimeoutInterceptor } from '../shared/interceptors/timeout.interceptor';
+import {
+  TransformInterceptor,
+  TimeoutInterceptor,
+} from '../shared/interceptors';
 
 export function configureInterceptors(app: INestApplication) {
   app.useGlobalInterceptors(
