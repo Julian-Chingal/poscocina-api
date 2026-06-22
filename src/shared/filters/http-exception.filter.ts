@@ -8,18 +8,27 @@ import {
 import { Logger } from 'nestjs-pino';
 import { Request, Response } from 'express';
 
-/** Shape que NestJS retorna internamente en sus HttpExceptions */
-interface NestHttpExceptionBody {
-  message: string | string[];
+interface HttpExceptionResponseBody {
+  message?: string | string[];
   error?: string;
+  statusCode?: number;
+  errors?: unknown[];
+}
+
+interface ErrorResponse {
   statusCode: number;
+  message: string;
+  error?: string;
+  errors?: unknown[];
+  timestamp: string;
+  path: string;
 }
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   constructor(private readonly logger: Logger) {}
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -29,45 +38,60 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (!isHttpException) {
+    const path = request.originalUrl ?? request.url;
+
+    if (!isHttpException || status >= 500) {
       this.logger.error(
         {
           err: exception,
-          path: request.url,
           method: request.method,
+          path,
+          stack: exception instanceof Error ? exception.stack : undefined,
+          cause: exception instanceof Error ? exception.cause : undefined,
         },
-        'Excepción no controlada',
+        'Request failed',
       );
     }
 
-    // getResponse() puede devolver string u objeto — lo aplanamos
-    const exceptionBody = isHttpException ? exception.getResponse() : null;
-
     const isProduction500 =
-      status === HttpStatus.INTERNAL_SERVER_ERROR &&
-      process.env.NODE_ENV === 'production';
+      status === 500 && process.env.NODE_ENV === 'production';
 
-    let message: string;
+    let message = 'Error desconocido';
     let error: string | undefined;
+    let errors: unknown[] | undefined;
 
-    if (isProduction500 || !isHttpException) {
+    if (isProduction500) {
       message = 'Error interno del servidor';
-    } else if (typeof exceptionBody === 'string') {
-      message = exceptionBody;
+    } else if (isHttpException) {
+      const exceptionResponse = exception.getResponse();
+
+      if (typeof exceptionResponse === 'string') {
+        message = exceptionResponse;
+      } else {
+        const body = exceptionResponse as HttpExceptionResponseBody;
+
+        message = Array.isArray(body.message)
+          ? body.message.join(', ')
+          : (body.message ?? 'Error desconocido');
+
+        error = body.error;
+        errors = body.errors;
+      }
+    } else if (exception instanceof Error) {
+      message = exception.message || 'Error interno del servidor';
     } else {
-      const body = exceptionBody as NestHttpExceptionBody;
-      message = Array.isArray(body.message)
-        ? body.message.join(', ')
-        : (body.message ?? 'Error desconocido');
-      error = body.error;
+      message = 'Error interno del servidor';
     }
 
-    response.status(status).json({
+    const errorResponse: ErrorResponse = {
       statusCode: status,
       message,
-      ...(error && { error }),
+      path,
+      ...(error ? { error } : {}),
+      ...(errors?.length ? { errors } : {}),
       timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+    };
+
+    response.status(status).json(errorResponse);
   }
 }
