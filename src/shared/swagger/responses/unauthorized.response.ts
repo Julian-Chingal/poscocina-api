@@ -17,7 +17,7 @@ export class UnauthorizedResponse {
     example: 'Unauthorized',
     description: 'Tipo de error HTTP',
   })
-  error!: string;
+  error?: string;
 
   @ApiProperty({
     example: '2026-06-22T05:30:10.000Z',
