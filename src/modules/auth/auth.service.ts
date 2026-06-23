@@ -52,11 +52,6 @@ export class AuthService {
     if (!passwordValid)
       throw new UnauthorizedException('Invalid email or password');
 
-    // Permisos
-    const permissions = user.role.permissions.map(
-      ({ permission }) => `${permission.module.name}:${permission.action}`,
-    );
-
     // Session
     const sessionId: string = uuidv4();
 
@@ -65,7 +60,6 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role.name,
-      permissions,
       sessionId,
     });
 
@@ -84,7 +78,6 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role.name,
-        permissions,
       },
     };
   }
@@ -131,17 +124,11 @@ export class AuthService {
     if (!user || !user.isActive)
       throw new UnauthorizedException('User not found or inactive');
 
-    // Permisos
-    const permissions = user.role.permissions.map(
-      ({ permission }) => `${permission.module.name}:${permission.action}`,
-    );
-
     // Generar nuevos tokens
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
       role: user.role.name,
-      permissions,
       sessionId,
     });
 
@@ -186,7 +173,6 @@ export class AuthService {
       sub: payload.sub,
       email: payload.email,
       role: payload.role,
-      permissions: payload.permissions,
       sessionId: payload.sessionId,
     };
 

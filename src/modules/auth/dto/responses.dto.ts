@@ -25,13 +25,6 @@ export class UserResponse {
     description: 'Rol asignado al usuario',
   })
   role!: Role;
-
-  @ApiProperty({
-    type: [String],
-    example: ['menu:read', 'orders:write'],
-    description: 'Lista de permisos del usuario en formato módulo:acción',
-  })
-  permissions!: string[];
 }
 
 export class MetaResponse {

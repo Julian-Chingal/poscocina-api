@@ -8,12 +8,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiOkResponse,
-  ApiNoContentResponse,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  ApiValidationError,
+  ApiAuthErrors,
+  ApiEntityResponse,
+} from '@shared/swagger/decorators';
+import { ApiTags, ApiOperation, ApiNoContentResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponse, RefreshResponse } from './dto/responses.dto';
@@ -22,12 +21,6 @@ import { CurrentUser } from '@shared/decorators';
 import type { JwtPayload } from '@shared/types';
 import type { Response } from 'express';
 import { clearAuthCookies } from './services/auth-cookies';
-import {
-  ApiAuth,
-  ApiValidationError,
-  ApiAuthErrors,
-} from '@shared/swagger/decorators';
-import { UnauthorizedResponse } from '@shared/swagger/responses';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -37,15 +30,9 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión en el sistema' })
-  @ApiOkResponse({
-    type: LoginResponse,
-    description: 'Inicio de sesión exitoso. Tokens enviados vía cookies.',
-  })
+  @ApiEntityResponse(LoginResponse, 'Inicio de sesión exitoso.')
   @ApiValidationError()
-  @ApiUnauthorizedResponse({
-    type: UnauthorizedResponse,
-    description: 'Credenciales inválidas.',
-  })
+  @ApiAuthErrors()
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(dto, res);
   }
@@ -53,14 +40,8 @@ export class AuthController {
   // Refresh token endpoint
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Renovar access token usando el refresh token de la cookie',
-  })
-  @ApiOkResponse({
-    type: RefreshResponse,
-    description: 'Tokens renovados exitosamente vía cookies.',
-  })
-  @ApiAuth()
+  @ApiOperation({ summary: 'Renovar access token' })
+  @ApiEntityResponse(RefreshResponse, 'Tokens renovados exitosamente')
   @ApiAuthErrors()
   @ApiValidationError()
   @UseGuards(JwtRefreshGuard)
@@ -80,12 +61,8 @@ export class AuthController {
   // Logout endpoint
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary:
-      'Cerrar la sesión actual (revoca el refresh token y marca sesión como terminada)',
-  })
+  @ApiOperation({ summary: 'Cerrar la sesión actual' })
   @ApiNoContentResponse({ description: 'Sesión cerrada exitosamente.' })
-  @ApiAuth()
   @ApiAuthErrors()
   @UseGuards(JwtAuthGuard)
   async logout(
@@ -101,10 +78,7 @@ export class AuthController {
   @Post('logout-all')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Cerrar todas las sesiones activas del usuario' })
-  @ApiNoContentResponse({
-    description: 'Todas las sesiones cerradas exitosamente.',
-  })
-  @ApiAuth()
+  @ApiNoContentResponse({ description: 'Todas las sesiones cerradas.' })
   @ApiAuthErrors()
   @UseGuards(JwtAuthGuard)
   logoutAll(@CurrentUser() user: JwtPayload) {
