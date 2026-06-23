@@ -16,8 +16,8 @@ import { ApiTags, ApiOperation, ApiNoContentResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponse, RefreshResponse } from './dto/responses.dto';
-import { JwtRefreshGuard, JwtAuthGuard } from '@shared/guards';
-import { CurrentUser } from '@shared/decorators';
+import { JwtRefreshGuard } from '@shared/guards';
+import { CurrentUser, Public } from '@shared/decorators';
 import type { JwtPayload } from '@shared/types';
 import type { Response } from 'express';
 import { clearAuthCookies } from './services/auth-cookies';
@@ -27,6 +27,7 @@ import { clearAuthCookies } from './services/auth-cookies';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   // Login endpoint
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión en el sistema' })
@@ -42,8 +43,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Renovar access token' })
   @ApiEntityResponse(RefreshResponse, 'Tokens renovados exitosamente')
-  @ApiAuthErrors()
   @ApiValidationError()
+  @ApiAuthErrors()
   @UseGuards(JwtRefreshGuard)
   async refresh(
     @CurrentUser()
@@ -64,7 +65,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Cerrar la sesión actual' })
   @ApiNoContentResponse({ description: 'Sesión cerrada exitosamente.' })
   @ApiAuthErrors()
-  @UseGuards(JwtAuthGuard)
   async logout(
     @CurrentUser() user: JwtPayload,
     @Res({ passthrough: true }) res: Response,
@@ -80,7 +80,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Cerrar todas las sesiones activas del usuario' })
   @ApiNoContentResponse({ description: 'Todas las sesiones cerradas.' })
   @ApiAuthErrors()
-  @UseGuards(JwtAuthGuard)
   logoutAll(@CurrentUser() user: JwtPayload) {
     return this.authService.logoutAllSessions(user.sub);
   }

@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { RedisHealthIndicator } from './redis.health';
 import { HealthResponse } from './dto/responses.dto';
 import { ApiEntityResponse } from '@shared/swagger/decorators';
+import { Public } from '@shared/decorators';
 
 @ApiTags('Health')
 @Controller('health')
@@ -15,6 +16,7 @@ export class HealthController {
     private readonly redisHealth: RedisHealthIndicator,
   ) {}
 
+  @Public()
   @Get()
   @HealthCheck()
   @ApiOperation({
