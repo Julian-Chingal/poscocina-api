@@ -1,4 +1,5 @@
-import { Prisma } from '../../generated/prisma/client';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Prisma, PermissionAction } from '../../generated/prisma/client';
 
 // Modulos disponibles en el sistema
 const MODULES = [
@@ -33,7 +34,7 @@ export async function seedModules(tx: Prisma.TransactionClient) {
 // Permisos disponibles para cada modulo
 const PERMISSIONS: Array<{
   module: string;
-  action: string;
+  action: PermissionAction;
   label: string;
 }> = [
   // POS

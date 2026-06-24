@@ -27,6 +27,7 @@ model User {
   role         Role     @relation(fields: [roleId], references: [id])
   orders       Order[]
   auditLogs    AuditLog[]
+  securityLogs SecurityLog[]
   
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -54,11 +55,18 @@ model Module {
   @@map("modules")
 }
 
+enum PermissionAction {
+  read
+  write
+  delete
+  manage
+}
+
 model Permission {
   id       String           @id @default(uuid())
   module   Module           @relation(fields: [moduleId], references: [id])
   moduleId String           @map("module_id")
-  action   String           // read, write, delete, manage
+  action   PermissionAction           // read, write, delete, manage
   label    String?
   roles    RolePermission[]
   
@@ -338,4 +346,22 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model SecurityLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  ip        String?
+  metadata  Json?
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+
+  @@map("security_logs")
 }
