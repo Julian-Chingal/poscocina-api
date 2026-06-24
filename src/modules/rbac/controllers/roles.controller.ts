@@ -20,7 +20,7 @@ import {
   RolesResponseEntity,
   RoleCreateResponseEntity,
   RolePermissionResponseEntity,
-} from '../entity/response.entity';
+} from '../entity/role-response.entity';
 import { RoleService } from '../services/roles.service';
 import { ModulePermission, Permission } from '@shared/decorators';
 import { CreateRoleDto } from '../dto/create-role.dto';
