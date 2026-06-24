@@ -53,7 +53,6 @@ export class PermissionsGuard implements CanActivate {
     const permissions = await this.permissionsCache.getRolePermissions(roleId);
     const required = `${normalizedModule}:${normalizedAction}`;
 
-    console.log('guard', permissions);
     const hasAccess = this.hasPermission(
       permissions,
       normalizedModule,
