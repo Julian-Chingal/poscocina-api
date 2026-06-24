@@ -14,6 +14,8 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '@shared/guards';
+import { PermissionCacheService } from './infrastructure/rbac';
+import { PermissionsGuard } from '@shared/guards/permissions.guard';
 
 @Module({
   imports: [
@@ -32,6 +34,10 @@ import { JwtAuthGuard } from '@shared/guards';
     AuthModule,
   ],
   controllers: [],
-  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    PermissionCacheService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
+  ],
 })
 export class AppModule {}

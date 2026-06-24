@@ -59,6 +59,7 @@ export class AuthService {
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
+      roleId: user.role.id,
       role: user.role.name,
       sessionId,
     });
@@ -77,7 +78,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role.name,
+        role: user.role.label,
       },
     };
   }
@@ -128,6 +129,7 @@ export class AuthService {
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
+      roleId: user.role.id,
       role: user.role.name,
       sessionId,
     });
@@ -172,6 +174,7 @@ export class AuthService {
     const accessPayload: JwtPayload = {
       sub: payload.sub,
       email: payload.email,
+      roleId: payload.roleId,
       role: payload.role,
       sessionId: payload.sessionId,
     };
@@ -204,6 +207,7 @@ export class AuthService {
       `session:${payload.sessionId}`,
       JSON.stringify({
         userId: payload.sub,
+        roleId: payload.roleId,
         refreshTokenHash,
       }),
       'EX',
