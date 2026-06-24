@@ -5,17 +5,17 @@ import {
   redisConfig,
 } from './config/app.config';
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { CoreModule } from './core/core.module';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
+import { PermissionCacheService } from './infrastructure/rbac';
+import { PermissionsGuard, JwtAuthGuard } from '@shared/guards';
 
 // Modules
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from '@shared/guards';
-import { PermissionCacheService } from './infrastructure/rbac';
-import { PermissionsGuard } from '@shared/guards/permissions.guard';
+import { RbacModule } from './modules/rbac/rbac.module';
 
 @Module({
   imports: [
@@ -32,6 +32,7 @@ import { PermissionsGuard } from '@shared/guards/permissions.guard';
     // Modules
     HealthModule,
     AuthModule,
+    RbacModule,
   ],
   controllers: [],
   providers: [

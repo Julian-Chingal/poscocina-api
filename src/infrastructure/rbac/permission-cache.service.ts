@@ -37,11 +37,11 @@ export class PermissionCacheService {
 
     const permissions = role.permissions.map(
       ({ permission }) =>
-        `${permission.module.name}:${permission.action.toLocaleLowerCase()}`,
+        `${permission.module.name.toLowerCase()}:${permission.action.toLocaleLowerCase()}`,
     );
 
     // Save cache
-    await this.redis.set(cacheKey, JSON.stringify(permissions));
+    await this.redis.set(cacheKey, JSON.stringify(permissions), 'EX', 3600);
 
     return permissions;
   }

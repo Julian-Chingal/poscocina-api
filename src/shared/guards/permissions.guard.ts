@@ -42,17 +42,25 @@ export class PermissionsGuard implements CanActivate {
     // Si no hay metadata => acceso libre
     if (!module && !action) return true;
 
+    const normalizedModule = module.toLowerCase();
+    const normalizedAction = action.toLowerCase();
+
     // Validacion Roles
     const request = context.switchToHttp().getRequest();
-    const roleId = request.user?.roleIdn as string;
+    const roleId = request.user?.roleId as string;
     if (!roleId) throw new ForbiddenException('Role Not Found');
 
     const permissions = await this.permissionsCache.getRolePermissions(roleId);
-    const required = `${module}:${action}`;
-    const hasAccess = this.hasPermission(permissions, module, action);
-    if (!hasAccess) {
+    const required = `${normalizedModule}:${normalizedAction}`;
+
+    console.log('guard', permissions);
+    const hasAccess = this.hasPermission(
+      permissions,
+      normalizedModule,
+      normalizedAction,
+    );
+    if (!hasAccess)
       throw new ForbiddenException(`Missing permission ${required}`);
-    }
 
     return true;
   }
