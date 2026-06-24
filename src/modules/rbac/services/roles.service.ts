@@ -58,6 +58,9 @@ export class RoleService {
     return this.prisma.role.update({
       where: { id },
       data,
+      include: {
+        permissions: { include: { permission: { include: { module: true } } } },
+      },
     });
   }
 
