@@ -9,8 +9,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { CoreModule } from './core/core.module';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
-import { PermissionCacheService } from './infrastructure/rbac';
 import { PermissionsGuard, JwtAuthGuard } from '@shared/guards';
+import { InfrastructureModule } from './infrastructure/infrastructure.module';
 
 // Modules
 import { HealthModule } from './modules/health/health.module';
@@ -28,6 +28,7 @@ import { RbacModule } from './modules/rbac/rbac.module';
     }),
 
     CoreModule,
+    InfrastructureModule,
 
     // Modules
     HealthModule,
@@ -36,7 +37,6 @@ import { RbacModule } from './modules/rbac/rbac.module';
   ],
   controllers: [],
   providers: [
-    PermissionCacheService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],

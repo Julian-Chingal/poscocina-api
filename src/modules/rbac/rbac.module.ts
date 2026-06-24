@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { RolesController } from './controllers/roles.controller';
 import { RoleService } from './services/roles.service';
-import { AuthService } from '../auth/auth.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [],
+  imports: [AuthModule],
   controllers: [RolesController],
-  providers: [RoleService, AuthService],
+  providers: [RoleService],
 })
 export class RbacModule {}
