@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateRoleEntity, RoleEntity } from './role.entity';
+import { RoleEntity, SingleRoleEntity } from './role.entity';
 import { IsString } from 'class-validator';
 
 export class MetaEntity {
@@ -31,8 +31,8 @@ export class SingleRoleResponseEntity {
 }
 
 export class RoleCreateResponseEntity {
-  @ApiProperty({ type: CreateRoleEntity })
-  data!: CreateRoleEntity;
+  @ApiProperty({ type: SingleRoleEntity })
+  data!: SingleRoleEntity;
 
   @ApiProperty({ type: MetaEntity })
   meta!: MetaEntity;

@@ -11,7 +11,7 @@ import {
   PermissionByIdResponse,
   PermissionByRoleResponse,
   PermissionResponse,
-} from '../entity/permission-response.enityt';
+} from '../entity/permission-response.entity';
 
 @Controller('rbac/permissions')
 export class PermissionController {

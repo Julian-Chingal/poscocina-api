@@ -27,8 +27,7 @@ export class RolePermissionRoleEntity {
   @IsString()
   permissionId!: string;
 
-  @ApiProperty({ type: PermissionEntity })
-  @IsArray()
+  @ApiProperty({ type: SingleRoleEntity })
   @IsNotEmpty()
   role!: SingleRoleEntity;
 }

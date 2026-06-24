@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
+import { SinglePermissionEntity } from './permission.entity';
 
 export class ModuleEntity {
   @ApiProperty({ example: 'b3645495-cc90-4b4b-b593-bd99466e5010' })
@@ -14,4 +15,9 @@ export class ModuleEntity {
   @IsOptional()
   @IsString()
   label?: string;
+}
+
+export class ModulePermissionEntity extends ModuleEntity {
+  @ApiProperty({ type: [SinglePermissionEntity] })
+  permissions!: SinglePermissionEntity[];
 }
