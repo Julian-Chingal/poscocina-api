@@ -64,7 +64,7 @@ enum PermissionAction {
 
 model Permission {
   id       String           @id @default(uuid())
-  module   Module           @relation(fields: [moduleId], references: [id])
+  module   Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   moduleId String           @map("module_id")
   action   PermissionAction           // read, write, delete, manage
   label    String?
