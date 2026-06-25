@@ -15,62 +15,56 @@ import {
   ApiEntityResponse,
   ApiValidationError,
 } from '@shared/swagger/decorators';
-import {
-  SingleRoleResponseEntity,
-  RolesResponseEntity,
-  RoleCreateResponseEntity,
-  RolePermissionResponseEntity,
-} from '../entity/role-response.entity';
 import { RoleService } from '../services/roles.service';
 import { ModulePermission, Permission } from '@shared/decorators';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { AssignPermissionsDto } from '../dto/assign-permissions.dto';
-import { ApiNoContentResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiNoContentResponse } from '@nestjs/swagger';
+import {
+  Message,
+  RoleEntity,
+  RolePermissionEntity,
+} from '../entity/role.entity';
 
 @ModulePermission('rbac')
 @Controller('rbac/roles')
+@ApiAuthErrors()
 export class RolesController {
   constructor(private readonly rolesService: RoleService) {}
 
   @Permission('read')
   @Get()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Obtener los roles del sistema' })
-  @ApiEntityResponse(RolesResponseEntity, 'Roles con sus permisos')
-  @ApiAuthErrors()
+  @ApiEntityResponse(RolePermissionEntity, 'Roles con sus permisos')
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Permission('read')
   @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Obtener un role del sistema' })
-  @ApiEntityResponse(SingleRoleResponseEntity, 'Roles con sus permisos')
-  @ApiAuthErrors()
+  @ApiEntityResponse(RolePermissionEntity, 'Roles con sus permisos', {
+    single: true,
+  })
   findOne(@Param('id') id: string) {
     return this.rolesService.findOne(id);
   }
 
   @Permission('write')
   @Post()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Crear un rol del sistema' })
-  @ApiEntityResponse(RoleCreateResponseEntity, 'Roles con sus permisos')
+  @ApiEntityResponse(RoleEntity, 'Roles con sus permisos', {
+    single: true,
+  })
   @ApiValidationError()
-  @ApiAuthErrors()
   create(@Body() dto: CreateRoleDto) {
     return this.rolesService.create(dto);
   }
 
   @Permission('write')
   @Patch(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Actualizar un rol del sistema' })
-  @ApiEntityResponse(SingleRoleResponseEntity, 'Roles con sus permisos')
+  @ApiEntityResponse(RolePermissionEntity, 'Roles con sus permisos', {
+    single: true,
+  })
   @ApiValidationError()
-  @ApiAuthErrors()
   update(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
     return this.rolesService.update(id, dto);
   }
@@ -78,9 +72,7 @@ export class RolesController {
   @Permission('delete')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Eliminar un rol del sistema' })
   @ApiNoContentResponse({ description: 'Rol Eliminado' })
-  @ApiAuthErrors()
   async remove(@Param('id') id: string) {
     await this.rolesService.remove(id);
     return;
@@ -88,11 +80,8 @@ export class RolesController {
 
   @Permission('manage')
   @Put(':id/permissions')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Actualizar Permisos de un rol del sistema' })
-  @ApiEntityResponse(RolePermissionResponseEntity, 'Mensaje Ejecucion')
+  @ApiEntityResponse(Message, 'Mensaje Ejecucion')
   @ApiValidationError()
-  @ApiAuthErrors()
   assignPermissions(
     @Param('id') id: string,
     @Body() dto: AssignPermissionsDto,

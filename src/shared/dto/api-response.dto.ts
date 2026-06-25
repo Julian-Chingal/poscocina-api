@@ -14,6 +14,12 @@ export function ApiResponse<T>(DataClass: Type<T>) {
     @ApiProperty({ type: Meta })
     meta!: Meta;
   }
+
+  // Sobrescribir el nombre de la clase dinámicamente
+  Object.defineProperty(ApiResponseClass, 'name', {
+    value: `${DataClass.name}ArrayResponse`,
+  });
+
   return ApiResponseClass;
 }
 
@@ -25,5 +31,11 @@ export function ApiResponseSingle<T>(DataClass: Type<T>) {
     @ApiProperty({ type: Meta })
     meta!: Meta;
   }
+
+  // Sobrescribir el nombre de la clase dinámicamente
+  Object.defineProperty(ApiResponseSingleClass, 'name', {
+    value: `${DataClass.name}SingleResponse`,
+  });
+
   return ApiResponseSingleClass;
 }

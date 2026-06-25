@@ -119,10 +119,13 @@ export class ModulesService {
   async remove(id: string) {
     const module = await this.prisma.module.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
         permissions: {
-          include: {
-            roles: true,
+          select: {
+            _count: {
+              select: { roles: true },
+            },
           },
         },
       },
@@ -133,14 +136,13 @@ export class ModulesService {
     }
 
     const hasAssignedRoles = module.permissions.some(
-      (permission) => permission.roles.length > 0,
+      (permission) => permission._count.roles > 0,
     );
 
-    if (hasAssignedRoles) {
+    if (hasAssignedRoles)
       throw new ConflictException(
         'Cannot delete a module with assigned permissions',
       );
-    }
 
     await this.prisma.module.delete({
       where: {
