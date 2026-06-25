@@ -3,32 +3,38 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
-
-import { ModulesService } from '../services/module.service';
-import { CreateModuleDto } from '../dto/create-module.dto';
-import { UpdateModuleDto } from '../dto/update-module.dto';
 import {
   ApiAuthErrors,
   ApiEntityResponse,
   ApiValidationError,
 } from '@shared/swagger/decorators';
+import { ModulesService } from '../services/module.service';
+import { CreateModuleDto } from '../dto/create-module.dto';
+import { UpdateModuleDto } from '../dto/update-module.dto';
 import { ModuleEntity, ModulePermissionEntity } from '../entity/module.entity';
+import { ApiNoContentResponse } from '@nestjs/swagger';
+import { ModulePermission, Permission } from '@shared/decorators';
 
+@ModulePermission('rbac')
 @Controller('rbac/modules')
 @ApiAuthErrors()
 export class ModulesController {
   constructor(private readonly modulesService: ModulesService) {}
 
+  @Permission('read')
   @Get()
   @ApiEntityResponse(ModulePermissionEntity, 'Permisos')
   findAll() {
     return this.modulesService.findAll();
   }
 
+  @Permission('read')
   @Get(':id')
   @ApiEntityResponse(ModulePermissionEntity, 'Permisos', { single: true })
   @ApiValidationError()
@@ -36,6 +42,7 @@ export class ModulesController {
     return this.modulesService.findOne(id);
   }
 
+  @Permission('write')
   @Post()
   @ApiEntityResponse(ModulePermissionEntity, 'Permisos', { single: true })
   @ApiValidationError()
@@ -43,6 +50,7 @@ export class ModulesController {
     return this.modulesService.create(dto);
   }
 
+  @Permission('write')
   @Patch(':id')
   @ApiEntityResponse(ModuleEntity, 'Modulo Actualizado', { single: true })
   @ApiValidationError()
@@ -50,9 +58,13 @@ export class ModulesController {
     return this.modulesService.update(id, dto);
   }
 
+  @Permission('delete')
   @Delete(':id')
   @ApiValidationError()
-  remove(@Param('id') id: string) {
-    return this.modulesService.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse({ description: 'Modulo Eliminado' })
+  async remove(@Param('id') id: string) {
+    await this.modulesService.remove(id);
+    return;
   }
 }
