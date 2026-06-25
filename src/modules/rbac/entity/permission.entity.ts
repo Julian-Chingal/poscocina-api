@@ -25,6 +25,6 @@ export class PermissionRolesEntity extends PermissionEntity {
   @ApiProperty({ type: () => ModuleEntity })
   module!: ModuleEntity;
 
-  @ApiProperty({ type: () => RolePermissionRoleEntity })
-  role!: RolePermissionRoleEntity;
+  @ApiProperty({ type: () => [RolePermissionRoleEntity] })
+  roles!: RolePermissionRoleEntity[];
 }
