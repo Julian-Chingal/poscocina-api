@@ -74,11 +74,34 @@ export class RoleService {
     if (usersCount > 0)
       throw new ConflictException('Cannot delete a role assigned to users');
 
-    return this.prisma.role.delete({ where: { id } });
+    return this.prisma.$transaction(async (tx) => {
+      await tx.rolePermission.deleteMany({
+        where: { roleId: id },
+      });
+
+      return tx.role.delete({
+        where: { id },
+      });
+    });
   }
 
   async assignPermissions(roleId: string, dto: AssignPermissionsDto) {
     await this.findOne(roleId);
+
+    // Validar si el permiso existe
+    if (dto.permissionIds.length > 0) {
+      const existingPermissionsCount = await this.prisma.permission.count({
+        where: {
+          id: { in: dto.permissionIds },
+        },
+      });
+
+      if (existingPermissionsCount !== dto.permissionIds.length) {
+        throw new NotFoundException(
+          'One or more permission IDs provided do not exist',
+        );
+      }
+    }
 
     await this.prisma.$transaction(async (tx) => {
       await tx.rolePermission.deleteMany({

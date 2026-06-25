@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PermissionEntity } from './permission.entity';
+import { PermissionModuleEntity } from './permission.entity';
 
 export class RoleEntity {
   @ApiProperty({ example: '7a075b43-c6bd-4ee7-878c-136c4d9344cb' })
@@ -22,8 +22,8 @@ export class RolePermissionsEntity {
   @ApiProperty({ example: 'b3645495-cc90-4b4b-b593-bd99466e5010' })
   permissionId!: string;
 
-  @ApiProperty({ type: [PermissionEntity] })
-  permissions!: PermissionEntity[];
+  @ApiProperty({ type: PermissionModuleEntity })
+  permission!: PermissionModuleEntity;
 }
 
 export class RolePermissionEntity extends RoleEntity {
