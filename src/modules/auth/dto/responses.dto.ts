@@ -27,34 +27,12 @@ export class UserResponse {
   role!: Role;
 }
 
-export class MetaResponse {
-  @ApiProperty({
-    example: '2026-06-20T06:22:02.075Z',
-    description: 'Fecha y hora de la respuesta en formato ISO 8601',
-  })
-  timestamp!: string;
-}
-
-export class LoginDataResponse {
+export class LoginUserResponse {
   @ApiProperty({
     type: UserResponse,
     description: 'Información del usuario autenticado',
   })
   user!: UserResponse;
-}
-
-export class LoginResponse {
-  @ApiProperty({
-    type: LoginDataResponse,
-    description: 'Datos del usuario y sesión',
-  })
-  data!: LoginDataResponse;
-
-  @ApiProperty({
-    type: MetaResponse,
-    description: 'Metadatos de la respuesta',
-  })
-  meta!: MetaResponse;
 }
 
 export class RefreshResponse {
